@@ -1,4 +1,4 @@
-# Requirements: VS Code 电子宠物
+﻿# Requirements: VS Code 电子宠物
 
 **Defined:** 2026-04-15
 **Core Value:** 开发者的编程伴侣 — 一只活在 VS Code 状态栏/侧边栏的电子宠物，让写代码不再孤单。
@@ -57,6 +57,27 @@
 | Desktop-wide pet | VS Code 扩展仅在编辑器内 |
 | Sickness/grooming mechanics | 过度复杂，干扰核心陪伴体验 |
 
+## Phases
+
+### Phase 1: Foundation - Pet Display and Core State
+Establish the pet in VS Code with basic state tracking.
+- Pet display in WebView
+- Core stats: mood, hunger, energy
+- Basic animations (4+ states)
+
+### Phase 2: Persistence and Interactions
+Add time-based mechanics, session persistence, and user interactions.
+- Stat decay over time
+- Persistence across restarts
+- Feed/Play/Pet interactions with animations
+- Theme support and status HUD
+
+### Phase 3: Activity Integration
+Connect pet behavior to user coding activity.
+- Coding activity detection
+- Mood reaction to coding
+- Extension-webview state sync
+
 ## Traceability
 
 Which phases cover which requirements. Updated during roadmap creation.
@@ -85,8 +106,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 **Coverage:**
 - v1 requirements: 18 total
 - Mapped to phases: 18
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-15*
-*Last updated: 2026-04-15 after initial definition*
+*Last updated: 2026-04-15 after roadmap creation*
