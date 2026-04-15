@@ -1,0 +1,161 @@
+import * as vscode from 'vscode';
+import * as path from 'path';
+import { PetState, PetMessageCommand } from './shared/types';
+
+// Global state for the pet
+let petState: PetState = {
+  mood: 80,
+  hunger: 50,
+  energy: 70,
+  animationState: 'idle',
+  lastInteraction: Date.now()
+};
+
+// Current webview panel
+let currentPanel: vscode.WebviewPanel | undefined;
+
+/**
+ * Activate the extension
+ */
+export function activate(context: vscode.ExtensionContext) {
+  // Register the pet.open command
+  const disposable = vscode.commands.registerCommand('pet.open', () => {
+    createPetPanel(context);
+  });
+
+  context.subscriptions.push(disposable);
+}
+
+/**
+ * Create the pet webview panel
+ */
+function createPetPanel(context: vscode.ExtensionContext): void {
+  // If panel already exists, reveal it
+  if (currentPanel) {
+    currentPanel.reveal(vscode.ViewColumn.One);
+    return;
+  }
+
+  // Create the webview panel
+  const panel = vscode.window.createWebviewPanel(
+    'petView',
+    'Pet',
+    vscode.ViewColumn.One,
+    {
+      enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.file(path.join(context.extensionPath, 'dist-webview'))
+      ],
+      retainContextWhenHidden: true
+    }
+  );
+
+  currentPanel = panel;
+
+  // Set the HTML content
+  updateWebviewContent(panel, context);
+
+  // Handle messages from the webview
+  panel.webview.onDidReceiveMessage((message: PetMessageCommand) => {
+    handleWebviewMessage(message);
+  });
+
+  // Clean up when panel is closed
+  panel.onDidDispose(() => {
+    currentPanel = undefined;
+  });
+}
+
+/**
+ * Update the webview content
+ */
+function updateWebviewContent(panel: vscode.WebviewPanel, context: vscode.ExtensionContext): void {
+  // Get webview URI for the dist-webview directory
+  const webviewRoot = panel.webview.asWebviewUri(
+    vscode.Uri.file(path.join(context.extensionPath, 'dist-webview'))
+  );
+  
+  // Build CSP that allows resources from our webview directory
+  const csp = [
+    "default-src 'none'",
+    `img-src ${webviewRoot} https:`,
+    `script-src ${webviewRoot}`,
+    `style-src ${webviewRoot}`
+  ].join('; ');
+
+  const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="${csp}">
+  <title>Pet</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${webviewRoot}/webview.js"></script>
+</body>
+</html>`;
+
+  panel.webview.html = htmlContent;
+
+  // Send initial state to webview
+  panel.webview.postMessage({ command: 'syncState', state: petState });
+}
+
+/**
+ * Handle messages from the webview
+ */
+function handleWebviewMessage(message: PetMessageCommand): void {
+  switch (message.command) {
+    case 'interact':
+      handleInteraction(message.action);
+      break;
+    case 'syncState':
+      petState = message.state;
+      break;
+  }
+
+  // Update the webview with new state
+  if (currentPanel) {
+    currentPanel.webview.postMessage({ command: 'syncState', state: petState });
+  }
+}
+
+/**
+ * Handle pet interaction
+ */
+function handleInteraction(action: 'feed' | 'play' | 'pet'): void {
+  petState.lastInteraction = Date.now();
+
+  switch (action) {
+    case 'feed':
+      petState.hunger = Math.min(100, petState.hunger + 20);
+      petState.animationState = 'happy';
+      break;
+    case 'play':
+      petState.energy = Math.max(0, petState.energy - 15);
+      petState.mood = Math.min(100, petState.mood + 15);
+      petState.animationState = 'happy';
+      break;
+    case 'pet':
+      petState.mood = Math.min(100, petState.mood + 10);
+      petState.animationState = 'happy';
+      break;
+  }
+
+  // Reset animation state after a delay
+  setTimeout(() => {
+    petState.animationState = 'idle';
+    if (currentPanel) {
+      currentPanel.webview.postMessage({ command: 'syncState', state: petState });
+    }
+  }, 1000);
+}
+
+/**
+ * Deactivate the extension
+ */
+export function deactivate(): void {
+  currentPanel = undefined;
+}
