@@ -1,0 +1,92 @@
+# Requirements: VS Code 电子宠物
+
+**Defined:** 2026-04-15
+**Core Value:** 开发者的编程伴侣 — 一只活在 VS Code 状态栏/侧边栏的电子宠物，让写代码不再孤单。
+
+## v1 Requirements
+
+### Pet Display
+
+- [ ] **PET-01**: Pet renders in VS Code Webview panel (sidebar or bottom panel)
+- [ ] **PET-02**: Pet has idle animation when no activity
+- [ ] **PET-03**: Pet responds visually to user interactions
+
+### Pet State System
+
+- [ ] **STATE-01**: Pet has mood stat (0-100, affects visual expression)
+- [ ] **STATE-02**: Pet has hunger stat (0-100, decreases over time)
+- [ ] **STATE-03**: Pet has energy stat (0-100, decreases with activity)
+- [ ] **STATE-04**: Stats decay over time based on timer
+- [ ] **STATE-05**: Stats persist across VS Code restarts
+
+### Interactions
+
+- [ ] **INT-01**: User can feed pet (increases hunger stat)
+- [ ] **INT-02**: User can play with pet (increases mood, decreases energy)
+- [ ] **INT-03**: User can pet/touch pet (small mood boost)
+- [ ] **INT-04**: Pet shows reaction animation after interaction
+
+### Coding Activity Integration
+
+- [ ] **ACT-01**: Pet detects active coding time (file edits)
+- [ ] **ACT-02**: Pet mood increases when user is actively coding
+- [ ] **ACT-03**: Pet state syncs between extension host and webview
+
+### UI/Visual
+
+- [ ] **UI-01**: Pet has at least 4 animation states (idle, happy, neutral, sad)
+- [ ] **UI-02**: UI supports VS Code light and dark themes
+- [ ] **UI-03**: Status bars show current pet stats
+
+## v2 Requirements
+
+### Advanced Features
+
+- **ADV-01**: Multiple pet types to choose from
+- **ADV-02**: Achievement/milestone system
+- **ADV-03**: Mini-games with pet
+- **ADV-04**: Pet reacts to build success/failure
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| Multi-pet support | 保持简单，单一宠物体验 |
+| Cloud sync | 本地存储即可，复杂性不值得 |
+| AI/LLM pet personality | 技术复杂，与核心价值无关 |
+| Desktop-wide pet | VS Code 扩展仅在编辑器内 |
+| Sickness/grooming mechanics | 过度复杂，干扰核心陪伴体验 |
+
+## Traceability
+
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| PET-01 | Phase 1 | Pending |
+| PET-02 | Phase 1 | Pending |
+| PET-03 | Phase 1 | Pending |
+| STATE-01 | Phase 1 | Pending |
+| STATE-02 | Phase 1 | Pending |
+| STATE-03 | Phase 1 | Pending |
+| STATE-04 | Phase 2 | Pending |
+| STATE-05 | Phase 2 | Pending |
+| INT-01 | Phase 2 | Pending |
+| INT-02 | Phase 2 | Pending |
+| INT-03 | Phase 2 | Pending |
+| INT-04 | Phase 2 | Pending |
+| ACT-01 | Phase 3 | Pending |
+| ACT-02 | Phase 3 | Pending |
+| ACT-03 | Phase 3 | Pending |
+| UI-01 | Phase 1 | Pending |
+| UI-02 | Phase 2 | Pending |
+| UI-03 | Phase 2 | Pending |
+
+**Coverage:**
+- v1 requirements: 18 total
+- Mapped to phases: 18
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-04-15*
+*Last updated: 2026-04-15 after initial definition*
