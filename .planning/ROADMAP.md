@@ -21,6 +21,11 @@
 4. All three stats (mood, hunger, energy) display and are readable
 5. Clicking/interacting with the pet triggers a visible reaction
 
+**Plans:** 1 plan(s)
+
+Plans:
+- [x] 01-01-PLAN.md — Extension shell, webview setup, and pet component with 4 animation states
+
 ---
 
 ## Phase 2: Persistence and Interactions
@@ -59,12 +64,12 @@
 
 ## Phase Status
 
-| Phase | Status | Completion Criteria |
-|-------|--------|---------------------|
-| Phase 1 | Pending | 5/5 success criteria |
-| Phase 2 | Pending | 6/6 success criteria |
-| Phase 3 | Pending | 4/4 success criteria |
+| Phase | Status | Plans | Completion Criteria |
+|-------|--------|-------|---------------------|
+| Phase 1 | Complete | 1/1 | 5/5 success criteria |
+| Phase 2 | Pending | 0/2 | 6/6 success criteria |
+| Phase 3 | Pending | 0/1 | 4/4 success criteria |
 
 ---
 
-*Last updated: 2026-04-15 after roadmap creation*
+*Last updated: 2026-04-16 after 01-01 plan completion*
