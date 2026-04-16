@@ -1,4 +1,4 @@
-﻿# VS Code 电子宠物 - Roadmap
+# VS Code 电子宠物 - Roadmap
 
 **Created:** 2026-04-15
 **Granularity:** Coarse (3 phases)
@@ -45,7 +45,11 @@ Plans:
 5. UI displays correctly in both light and dark VS Code themes
 6. Status bars/HUD shows numeric values for all three stats
 
----
+**Plans:** 2 plan(s)
+
+Plans:
+- [ ] 02-01-PLAN.md — Extension-side decay timers and GlobalState persistence
+- [ ] 02-02-PLAN.md — Interaction animations (eating/bouncing/purring) and theme support
 
 ## Phase 3: Activity Integration
 
@@ -67,9 +71,9 @@ Plans:
 | Phase | Status | Plans | Completion Criteria |
 |-------|--------|-------|---------------------|
 | Phase 1 | Complete | 1/1 | 5/5 success criteria |
-| Phase 2 | Pending | 0/2 | 6/6 success criteria |
+| Phase 2 | Planned | 2/2 | 6/6 success criteria |
 | Phase 3 | Pending | 0/1 | 4/4 success criteria |
 
 ---
 
-*Last updated: 2026-04-16 after 01-01 plan completion*
+*Last updated: 2026-04-17 after 02-persistence-and-interactions plan completion*
