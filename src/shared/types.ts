@@ -11,6 +11,7 @@ export interface PetStats {
 export interface PetState extends PetStats {
   animationState: 'idle' | 'happy' | 'neutral' | 'sad';
   lastInteraction: number; // timestamp
+  lastUpdated: number;     // timestamp of last stat update (for decay calculation)
 }
 
 export type PetMessageCommand = 

@@ -11,7 +11,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:pet.open"
+    "onCommand:pet.open",
+    "onWebviewPanel:petView"
   ],
   "main": "./dist/extension.js",
   "contributes": {

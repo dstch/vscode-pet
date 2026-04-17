@@ -8,22 +8,79 @@ let petState: PetState = {
   hunger: 50,
   energy: 70,
   animationState: 'idle',
-  lastInteraction: Date.now()
+  lastInteraction: Date.now(),
+  lastUpdated: Date.now()
 };
 
 // Current webview panel
 let currentPanel: vscode.WebviewPanel | undefined;
 
+// Extension context (set during activation)
+let context: vscode.ExtensionContext;
+
+// Decay timer interval reference
+let decayInterval: ReturnType<typeof setInterval> | undefined;
+
+// Decay rates in milliseconds
+const HUNGER_DECAY_RATE = 5 * 60 * 1000; // 5 minutes
+const ENERGY_DECAY_RATE = 10 * 60 * 1000; // 10 minutes
+const DECAY_CHECK_INTERVAL = 60 * 1000; // Check every minute
+
+// GlobalState key for persistence
+const GLOBAL_STATE_KEY = 'petState';
+
+/**
+ * WebviewPanelSerializer for restoring pet panel after VS Code restart
+ */
+class PetSerializer implements vscode.WebviewPanelSerializer {
+  constructor(private ctx: vscode.ExtensionContext) {}
+
+  async deserializeWebviewPanel(panel: vscode.WebviewPanel): Promise<void> {
+    // Restore panel content
+    currentPanel = panel;
+    updateWebviewContent(panel, this.ctx);
+
+    // Restore state from GlobalState
+    loadState();
+
+    // Set up message handler
+    panel.webview.onDidReceiveMessage((message: PetMessageCommand) => {
+      handleWebviewMessage(message);
+    });
+
+    // Handle dispose
+    panel.onDidDispose(() => {
+      currentPanel = undefined;
+    });
+
+    // Sync current state to restored webview
+    panel.webview.postMessage({ command: 'syncState', state: petState });
+  }
+}
+
 /**
  * Activate the extension
  */
-export function activate(context: vscode.ExtensionContext) {
+export function activate(ctx: vscode.ExtensionContext) {
+  // Store context for use by other functions
+  context = ctx;
+
   // Register the pet.open command
   const disposable = vscode.commands.registerCommand('pet.open', () => {
-    createPetPanel(context);
+    createPetPanel(ctx);
   });
 
-  context.subscriptions.push(disposable);
+  ctx.subscriptions.push(disposable);
+
+  // Load saved state from GlobalState
+  loadState();
+
+  // Start the decay timer
+  startDecayTimer();
+  ctx.subscriptions.push({ dispose: stopDecayTimer });
+
+  // Register webview panel serializer for state restoration
+  vscode.window.registerWebviewPanelSerializer('petView', new PetSerializer(ctx));
 }
 
 /**
@@ -123,10 +180,102 @@ function handleWebviewMessage(message: PetMessageCommand): void {
 }
 
 /**
+ * Save current pet state to GlobalState
+ */
+function saveState(): void {
+  const serialized = JSON.stringify(petState);
+  context.globalState.update('petState', serialized);
+}
+
+/**
+ * Load pet state from GlobalState
+ */
+function loadState(): void {
+  const saved = context.globalState.get<string>('petState');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved) as PetState;
+      petState = { ...petState, ...parsed };
+      // Calculate decay that occurred while VS Code was closed
+      const elapsed = Date.now() - petState.lastUpdated;
+      const hungerDecays = Math.floor(elapsed / HUNGER_DECAY_RATE);
+      const energyDecays = Math.floor(elapsed / ENERGY_DECAY_RATE);
+      petState.hunger = Math.max(0, petState.hunger - hungerDecays);
+      petState.energy = Math.max(0, petState.energy - energyDecays);
+      petState.lastUpdated = Date.now();
+    } catch (e) {
+      // Invalid saved state, use defaults
+    }
+  }
+}
+
+/**
+ * Start the decay timer
+ */
+function startDecayTimer(): void {
+  if (decayInterval) {
+    return; // Already running
+  }
+
+  decayInterval = setInterval(() => {
+    const now = Date.now();
+    const elapsed = now - petState.lastUpdated;
+
+    let changed = false;
+
+    // Check hunger decay
+    if (elapsed >= HUNGER_DECAY_RATE) {
+      const hungerDecays = Math.floor(elapsed / HUNGER_DECAY_RATE);
+      petState.hunger = Math.max(0, petState.hunger - hungerDecays);
+      petState.lastUpdated = now;
+      changed = true;
+    }
+
+    // Check energy decay
+    const energyElapsed = now - petState.lastUpdated;
+    if (energyElapsed >= ENERGY_DECAY_RATE) {
+      const energyDecays = Math.floor(energyElapsed / ENERGY_DECAY_RATE);
+      petState.energy = Math.max(0, petState.energy - energyDecays);
+      petState.lastUpdated = now;
+      changed = true;
+    }
+
+    // Mood decays when hunger < 30 or energy < 30
+    if (petState.hunger < 30 || petState.energy < 30) {
+      petState.mood = Math.max(0, petState.mood - 1);
+      changed = true;
+    }
+
+    // Clamp all stats to 0-100
+    petState.mood = Math.max(0, Math.min(100, petState.mood));
+    petState.hunger = Math.max(0, Math.min(100, petState.hunger));
+    petState.energy = Math.max(0, Math.min(100, petState.energy));
+
+    if (changed) {
+      saveState();
+      if (currentPanel) {
+        currentPanel.webview.postMessage({ command: 'syncState', state: petState });
+      }
+    }
+  }, DECAY_CHECK_INTERVAL);
+}
+
+/**
+ * Stop the decay timer
+ */
+function stopDecayTimer(): void {
+  if (decayInterval) {
+    clearInterval(decayInterval);
+    decayInterval = undefined;
+  }
+}
+
+/**
  * Handle pet interaction
  */
 function handleInteraction(action: 'feed' | 'play' | 'pet'): void {
   petState.lastInteraction = Date.now();
+  petState.lastUpdated = Date.now();
 
   switch (action) {
     case 'feed':
@@ -144,6 +293,12 @@ function handleInteraction(action: 'feed' | 'play' | 'pet'): void {
       break;
   }
 
+  // Save state after interaction
+  saveState();
+
+  // Start decay timer if not already running
+  startDecayTimer();
+
   // Reset animation state after a delay
   setTimeout(() => {
     petState.animationState = 'idle';
@@ -157,5 +312,6 @@ function handleInteraction(action: 'feed' | 'play' | 'pet'): void {
  * Deactivate the extension
  */
 export function deactivate(): void {
+  stopDecayTimer();
   currentPanel = undefined;
 }
