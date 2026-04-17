@@ -48,8 +48,8 @@ Plans:
 **Plans:** 2 plan(s)
 
 Plans:
-- [ ] 02-01-PLAN.md — Extension-side decay timers and GlobalState persistence
-- [ ] 02-02-PLAN.md — Interaction animations (eating/bouncing/purring) and theme support
+- [x] 02-01-PLAN.md — Extension-side decay timers and GlobalState persistence
+- [x] 02-02-PLAN.md — Interaction animations (eating/bouncing/purring) and theme support
 
 ## Phase 3: Activity Integration
 
@@ -71,7 +71,7 @@ Plans:
 | Phase | Status | Plans | Completion Criteria |
 |-------|--------|-------|---------------------|
 | Phase 1 | Complete | 1/1 | 5/5 success criteria |
-| Phase 2 | Planned | 2/2 | 6/6 success criteria |
+| Phase 2 | Complete | 2/2 | 6/6 success criteria |
 | Phase 3 | Pending | 0/1 | 4/4 success criteria |
 
 ---

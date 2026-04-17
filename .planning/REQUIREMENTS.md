@@ -16,8 +16,8 @@
 - [ ] **STATE-01**: Pet has mood stat (0-100, affects visual expression)
 - [ ] **STATE-02**: Pet has hunger stat (0-100, decreases over time)
 - [ ] **STATE-03**: Pet has energy stat (0-100, decreases with activity)
-- [ ] **STATE-04**: Stats decay over time based on timer
-- [ ] **STATE-05**: Stats persist across VS Code restarts
+- [x] **STATE-04**: Stats decay over time based on timer
+- [x] **STATE-05**: Stats persist across VS Code restarts
 
 ### Interactions
 
@@ -90,8 +90,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STATE-01 | Phase 1 | Pending |
 | STATE-02 | Phase 1 | Pending |
 | STATE-03 | Phase 1 | Pending |
-| STATE-04 | Phase 2 | Pending |
-| STATE-05 | Phase 2 | Pending |
+| STATE-04 | Phase 2 | Complete |
+| STATE-05 | Phase 2 | Complete |
 | INT-01 | Phase 2 | Pending |
 | INT-02 | Phase 2 | Pending |
 | INT-03 | Phase 2 | Pending |
