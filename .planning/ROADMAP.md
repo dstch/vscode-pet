@@ -64,6 +64,11 @@ Plans:
 3. State changes in extension host correctly reflect in webview UI within 1 second
 4. User can observe pet becoming happier during a coding session vs idle period
 
+**Plans:** 1 plan(s)
+
+Plans:
+- [ ] 03-01-PLAN.md — Activity tracking via onDidSaveTextDocument and mood increase
+
 ---
 
 ## Phase Status
@@ -72,7 +77,7 @@ Plans:
 |-------|--------|-------|---------------------|
 | Phase 1 | Complete | 1/1 | 5/5 success criteria |
 | Phase 2 | Complete | 2/2 | 6/6 success criteria |
-| Phase 3 | Pending | 0/1 | 4/4 success criteria |
+| Phase 3 | Planned | 1/1 | 4/4 success criteria |
 
 ---
 
