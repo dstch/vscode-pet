@@ -156,6 +156,12 @@ function updateWebviewContent(panel: vscode.WebviewPanel, context: vscode.Extens
 
   panel.webview.html = htmlContent;
 
+  // Send theme info to webview
+  const theme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark
+    ? 'vscode-dark'
+    : 'vscode-light';
+  panel.webview.postMessage({ command: 'theme', theme });
+
   // Send initial state to webview
   panel.webview.postMessage({ command: 'syncState', state: petState });
 }
@@ -170,6 +176,14 @@ function handleWebviewMessage(message: PetMessageCommand): void {
       break;
     case 'syncState':
       petState = message.state;
+      break;
+    case 'getTheme':
+      if (currentPanel) {
+        const theme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark
+          ? 'vscode-dark'
+          : 'vscode-light';
+        currentPanel.webview.postMessage({ command: 'theme', theme });
+      }
       break;
   }
 

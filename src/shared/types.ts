@@ -14,6 +14,8 @@ export interface PetState extends PetStats {
   lastUpdated: number;     // timestamp of last stat update (for decay calculation)
 }
 
-export type PetMessageCommand = 
+export type PetMessageCommand =
   | { command: 'interact'; action: 'feed' | 'play' | 'pet' }
-  | { command: 'syncState'; state: PetState };
+  | { command: 'syncState'; state: PetState }
+  | { command: 'theme'; theme: 'vscode-light' | 'vscode-dark' }
+  | { command: 'getTheme' };
