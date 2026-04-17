@@ -271,6 +271,34 @@ function stopDecayTimer(): void {
 }
 
 /**
+ * Get animation duration based on animation state
+ */
+function getAnimationDuration(animationState: string): number {
+  switch (animationState) {
+    case 'eating': return 1500;
+    case 'bouncing': return 2000;
+    case 'purring': return 1000;
+    default: return 1000;
+  }
+}
+
+/**
+ * Get mood-based animation state based on current stats
+ */
+function getMoodAnimationState(state: PetState): 'idle' | 'neutral' | 'sad' {
+  // If stats are low, pet looks sad
+  if (state.hunger < 30 || state.energy < 30) {
+    return 'sad';
+  }
+  // If stats are okay, neutral
+  if (state.hunger < 50 || state.energy < 50) {
+    return 'neutral';
+  }
+  // Otherwise idle
+  return 'idle';
+}
+
+/**
  * Handle pet interaction
  */
 function handleInteraction(action: 'feed' | 'play' | 'pet'): void {
@@ -280,32 +308,38 @@ function handleInteraction(action: 'feed' | 'play' | 'pet'): void {
   switch (action) {
     case 'feed':
       petState.hunger = Math.min(100, petState.hunger + 20);
-      petState.animationState = 'happy';
+      petState.mood = Math.min(100, petState.mood + 5);
+      petState.animationState = 'eating';
       break;
     case 'play':
-      petState.energy = Math.max(0, petState.energy - 15);
       petState.mood = Math.min(100, petState.mood + 15);
-      petState.animationState = 'happy';
+      petState.energy = Math.max(0, petState.energy - 15);
+      petState.animationState = 'bouncing';
       break;
     case 'pet':
       petState.mood = Math.min(100, petState.mood + 10);
-      petState.animationState = 'happy';
+      petState.animationState = 'purring';
       break;
   }
 
   // Save state after interaction
   saveState();
 
-  // Start decay timer if not already running
-  startDecayTimer();
+  // Send to webview
+  if (currentPanel) {
+    currentPanel.webview.postMessage({ command: 'syncState', state: petState });
+  }
 
-  // Reset animation state after a delay
+  // Reset animation state after animation completes
+  const duration = getAnimationDuration(petState.animationState);
   setTimeout(() => {
-    petState.animationState = 'idle';
+    const moodState = getMoodAnimationState(petState);
+    petState.animationState = moodState;
+    saveState();
     if (currentPanel) {
       currentPanel.webview.postMessage({ command: 'syncState', state: petState });
     }
-  }, 1000);
+  }, duration);
 }
 
 /**

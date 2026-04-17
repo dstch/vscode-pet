@@ -9,7 +9,7 @@ export interface PetStats {
 }
 
 export interface PetState extends PetStats {
-  animationState: 'idle' | 'happy' | 'neutral' | 'sad';
+  animationState: 'idle' | 'happy' | 'neutral' | 'sad' | 'eating' | 'bouncing' | 'purring';
   lastInteraction: number; // timestamp
   lastUpdated: number;     // timestamp of last stat update (for decay calculation)
 }
