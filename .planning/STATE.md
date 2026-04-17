@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: unknown
-last_updated: "2026-04-16T16:18:22.341Z"
+status: Executing Phase 02
+last_updated: "2026-04-17T14:32:57.955Z"
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 1
-  completed_plans: 1
-  percent: 100
+  total_plans: 3
+  completed_plans: 2
+  percent: 67
 ---
 
 # State: VS Code 电子宠物
@@ -18,11 +18,12 @@ progress:
 
 ## Current Phase
 
-**Phase 1** (Planned)
+**Phase 2** (Planned)
 
-### Phase 1 Plans
+### Phase 2 Plans
 
-- [x] 01-01-PLAN.md — Extension shell, webview setup, and pet component with 4 animation states
+- [x] 02-01-PLAN.md — Stat decay timers and GlobalState persistence
+- [ ] 02-02-PLAN.md — Interaction animations
 
 ## Phase Progress
 
@@ -36,8 +37,8 @@ progress:
 
 ### Phase 2: Persistence and Interactions
 
-- [ ] **SC-2.1**: Stats decrease over time when user is not interacting
-- [ ] **SC-2.2**: Closing and reopening VS Code restores pet to previous state
+- [x] **SC-2.1**: Stats decrease over time when user is not interacting
+- [x] **SC-2.2**: Closing and reopening VS Code restores pet to previous state
 - [ ] **SC-2.3**: Feed/Play/Pet buttons produce correct stat changes
 - [ ] **SC-2.4**: Each interaction triggers a distinct visible animation
 - [ ] **SC-2.5**: UI displays correctly in light and dark themes
@@ -60,8 +61,8 @@ progress:
 | STATE-01 | Phase 1 | Complete |
 | STATE-02 | Phase 1 | Complete |
 | STATE-03 | Phase 1 | Complete |
-| STATE-04 | Phase 2 | Pending |
-| STATE-05 | Phase 2 | Pending |
+| STATE-04 | Phase 2 | Complete |
+| STATE-05 | Phase 2 | Complete |
 | INT-01 | Phase 2 | Pending |
 | INT-02 | Phase 2 | Pending |
 | INT-03 | Phase 2 | Pending |
