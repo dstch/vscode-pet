@@ -12,27 +12,42 @@
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ 在 VS Code 中显示电子宠物界面 — v1.0
+- ✓ 宠物状态系统（心情、饥饿度、精力）— v1.0
+- ✓ 与宠物交互的功能（喂食、玩耍、抚摸）— v1.0
+- ✓ 基于用户编码活动的状态变化 — v1.0
+- ✓ 宠物外观和动画 — v1.0
+- ✓ Stats decay over time based on timer — v1.0 Phase 2
+- ✓ Stats persist across VS Code restarts — v1.0 Phase 2
+- ✓ Feed/Play/Pet interactions with animations — v1.0 Phase 2
+- ✓ Theme support (light/dark) — v1.0 Phase 2
+- ✓ Status bars show current pet stats — v1.0 Phase 2
+- ✓ Coding activity detection via file saves — v1.0 Phase 3
+- ✓ Mood increases during active coding sessions — v1.0 Phase 3
+- ✓ State syncs between extension host and webview — v1.0 Phase 3
 
 ### Active
 
-- [ ] 在 VS Code 中显示电子宠物界面
-- [ ] 宠物状态系统（心情、饥饿度、精力）
-- [ ] 与宠物交互的功能（喂食、玩耍、抚摸）
-- [ ] 基于用户编码活动的状态变化
-- [ ] 宠物外观和动画
+- [ ] Multiple pet types to choose from
+- [ ] Achievement/milestone system
+- [ ] Mini-games with pet
+- [ ] Pet reacts to build success/failure
 
 ### Out of Scope
 
-- 多宠物支持 — 保持简单，单一宠物
-- 云端同步宠物状态 — 本地存储即可
-- 多人联机互动 — 单用户体验
+| Feature | Reason |
+|---------|--------|
+| 多宠物支持 | 保持简单，单一宠物 |
+| 云端同步宠物状态 | 本地存储即可 |
+| 多人联机互动 | 单用户体验 |
+| AI/LLM pet personality | 技术复杂，与核心价值无关 |
 
 ## Context
 
 - VS Code 扩展市场已有一些桌面宠物类插件，但大多功能简单、界面粗糙
 - 目标用户：长时间在 VS Code 中工作的开发者
 - 技术限制：VS Code Webview API、Extension API
+- **当前状态：** v1.0 MVP 已完成，3个阶段，4个计划，9个任务
 
 ## Constraints
 
@@ -44,26 +59,31 @@
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Webview UI | 丰富的 UI 交互需求 | — Pending |
-| 单宠物设计 | 简化复杂度，聚焦体验 | — Pending |
+| React webview UI | 丰富的 UI 交互需求 | ✓ Working well |
+| Zustand for state | 轻量级，支持 persistence | ✓ Good DX |
+| CSS animations | 简单、性能好 | ✓ GPU accelerated |
+| GlobalState persistence | 扩展推荐方式 | ✓ Survives restarts |
+| onDidSaveTextDocument | 可靠、省电 | ✓ Activity tracking works |
 
 ---
 
-*Last updated: 2026-04-15 after initialization*
+*Last updated: 2026-04-18 after v1.0 milestone*
 
-## Evolution
+## Current State
 
-This document evolves at phase transitions and milestone boundaries.
+**v1.0 MVP shipped** — All core features implemented and tested:
+- Pet displays in VS Code WebView panel
+- Three stats: mood, hunger, energy (0-100)
+- Stats decay over time, persist across restarts
+- Feed/Play/Pet interactions with animations
+- Activity tracking via file saves → mood increases
+- Theme support (light/dark)
+- Status HUD showing stat values
 
-**After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
+## Next Milestone Goals
 
-**After each milestone** (via `/gsd-complete-milestone`):
-1. Full review of all sections
-2. Core Value check — still the right priority?
-3. Audit Out of Scope — reasons still valid?
-4. Update Context with current state
+Potential v1.1 improvements:
+- Multiple pet types
+- Achievement/milestone system
+- Build success/failure reactions
+- Mini-games
