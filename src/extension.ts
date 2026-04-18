@@ -26,6 +26,12 @@ const HUNGER_DECAY_RATE = 5 * 60 * 1000; // 5 minutes
 const ENERGY_DECAY_RATE = 10 * 60 * 1000; // 10 minutes
 const DECAY_CHECK_INTERVAL = 60 * 1000; // Check every minute
 
+// Activity tracking constants
+const ACTIVITY_SESSION_WINDOW = 5 * 60 * 1000; // 5 minutes
+const MIN_MOOD_INCREASE = 1;
+const MAX_MOOD_INCREASE = 2;
+let lastSaveTimestamp: number = 0;
+
 // GlobalState key for persistence
 const GLOBAL_STATE_KEY = 'petState';
 
@@ -78,6 +84,11 @@ export function activate(ctx: vscode.ExtensionContext) {
   // Start the decay timer
   startDecayTimer();
   ctx.subscriptions.push({ dispose: stopDecayTimer });
+
+  // Register activity tracking (file save events)
+  vscode.workspace.onDidSaveTextDocument((document) => {
+    handleFileSave();
+  });
 
   // Register webview panel serializer for state restoration
   vscode.window.registerWebviewPanelSerializer('petView', new PetSerializer(ctx));
@@ -281,6 +292,32 @@ function stopDecayTimer(): void {
   if (decayInterval) {
     clearInterval(decayInterval);
     decayInterval = undefined;
+  }
+}
+
+/**
+ * Handle file save event - tracks coding activity and increases mood
+ */
+function handleFileSave(): void {
+  const now = Date.now();
+  const timeSinceLastSave = now - lastSaveTimestamp;
+
+  // Check if this is within an active session (saves within 5-minute window)
+  if (timeSinceLastSave < ACTIVITY_SESSION_WINDOW || lastSaveTimestamp === 0) {
+    // Increase mood by random amount between MIN and MAX
+    const moodIncrease = Math.floor(Math.random() * (MAX_MOOD_INCREASE - MIN_MOOD_INCREASE + 1)) + MIN_MOOD_INCREASE;
+    petState.mood = Math.min(100, petState.mood + moodIncrease);
+  }
+
+  // Update timestamp and interaction time
+  lastSaveTimestamp = now;
+  petState.lastInteraction = now;
+  petState.lastUpdated = now;
+
+  // Save and sync state
+  saveState();
+  if (currentPanel) {
+    currentPanel.webview.postMessage({ command: 'syncState', state: petState });
   }
 }
 
