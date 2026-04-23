@@ -2,8 +2,8 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-  mode: 'development',
-  target: 'webworker',
+  mode: 'production',
+  target: 'web',
   entry: './src-webview/index.tsx',
   output: {
     path: path.resolve(__dirname, 'dist-webview'),
@@ -32,6 +32,7 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './src-webview/index.html',
       filename: 'index.html',
+      inject: true,
     }),
   ],
   externals: {

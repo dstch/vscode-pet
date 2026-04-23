@@ -7,17 +7,5 @@
 </head>
 <body>
   <div id="root"></div>
-  <script>
-    const vscode = acquireVsCodeApi();
-    // Listen for theme messages from extension
-    window.addEventListener('message', event => {
-      const message = event.data;
-      if (message.command === 'theme') {
-        document.body.className = message.theme;
-      }
-    });
-    // Request current theme
-    vscode.postMessage({ command: 'getTheme' });
-  </script>
 </body>
 </html>

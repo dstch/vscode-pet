@@ -16,8 +16,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:pet.open",
-    "onWebviewPanel:petView"
+    "onView:petView.main"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -28,19 +27,27 @@
         "category": "Pet"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "petView",
+          "title": "Pet",
+          "icon": "media/icon.png"
+        }
+      ]
+    },
     "views": {
       "petView": [
         {
           "type": "webview",
           "id": "petView.main",
-          "name": "Pet",
-          "icon": "media/icon.png"
+          "name": "Pet"
         }
       ]
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run compile && npm run compile-webview",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "compile-webview": "node scripts/build-webview.js",

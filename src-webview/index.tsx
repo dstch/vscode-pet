@@ -1,30 +1,22 @@
-/**
- * WebView entry point - React mount and message handling
- */
-
 import * as React from 'react';
 import * as ReactDOM from 'react-dom/client';
 import { Pet } from './components/Pet';
 import { PetState } from '../src/shared/types';
+import './styles.css';
 
-// Acquire VS Code API
 const vscode = acquireVsCodeApi();
 
-// Default initial state
 const defaultState: PetState = {
   mood: 80,
   hunger: 50,
   energy: 70,
   animationState: 'idle',
-  lastInteraction: Date.now()
+  lastInteraction: Date.now(),
+  lastUpdated: Date.now()
 };
 
-// Get persisted state or use default
 let currentState = vscode.getState() || defaultState;
 
-/**
- * Render the React app
- */
 function renderApp(state: PetState): void {
   const root = document.getElementById('root');
   if (!root) { return; }
@@ -38,21 +30,24 @@ function renderApp(state: PetState): void {
   );
 }
 
-// Initial render
 renderApp(currentState);
 
-// Listen for messages from extension
 window.addEventListener('message', event => {
-  const { command, state } = event.data;
-  
+  const { command, state, theme } = event.data;
+
   if (command === 'syncState' && state) {
     currentState = state;
     vscode.setState(state);
     renderApp(currentState);
   }
+
+  if (command === 'theme' && theme) {
+    document.body.className = theme;
+  }
 });
 
-// Handle pet click to trigger interaction
+vscode.postMessage({ command: 'getTheme' });
+
 document.addEventListener('click', () => {
   vscode.postMessage({ command: 'interact', action: 'pet' });
 });

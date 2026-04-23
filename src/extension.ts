@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { PetState, PetMessageCommand } from './shared/types';
 
-// Global state for the pet
 let petState: PetState = {
   mood: 80,
   hunger: 50,
@@ -12,146 +11,70 @@ let petState: PetState = {
   lastUpdated: Date.now()
 };
 
-// Current webview panel
-let currentPanel: vscode.WebviewPanel | undefined;
-
-// Extension context (set during activation)
 let context: vscode.ExtensionContext;
-
-// Decay timer interval reference
 let decayInterval: ReturnType<typeof setInterval> | undefined;
+let petView: vscode.WebviewView | undefined;
 
-// Decay rates in milliseconds
-const HUNGER_DECAY_RATE = 5 * 60 * 1000; // 5 minutes
-const ENERGY_DECAY_RATE = 10 * 60 * 1000; // 10 minutes
-const DECAY_CHECK_INTERVAL = 60 * 1000; // Check every minute
+const HUNGER_DECAY_RATE = 5 * 60 * 1000;
+const ENERGY_DECAY_RATE = 10 * 60 * 1000;
+const DECAY_CHECK_INTERVAL = 60 * 1000;
 
-// Activity tracking constants
-const ACTIVITY_SESSION_WINDOW = 5 * 60 * 1000; // 5 minutes
+const ACTIVITY_SESSION_WINDOW = 5 * 60 * 1000;
 const MIN_MOOD_INCREASE = 1;
 const MAX_MOOD_INCREASE = 2;
 let lastSaveTimestamp: number = 0;
 
-// GlobalState key for persistence
 const GLOBAL_STATE_KEY = 'petState';
 
-/**
- * WebviewPanelSerializer for restoring pet panel after VS Code restart
- */
-class PetSerializer implements vscode.WebviewPanelSerializer {
+class PetViewProvider implements vscode.WebviewViewProvider {
   constructor(private ctx: vscode.ExtensionContext) {}
 
-  async deserializeWebviewPanel(panel: vscode.WebviewPanel): Promise<void> {
-    // Restore panel content
-    currentPanel = panel;
-    updateWebviewContent(panel, this.ctx);
+  resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    _context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken
+  ): void {
+    petView = webviewView;
 
-    // Restore state from GlobalState
-    loadState();
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.file(this.ctx.extensionPath)
+      ]
+    };
 
-    // Set up message handler
-    panel.webview.onDidReceiveMessage((message: PetMessageCommand) => {
+    this.updateWebviewContent(webviewView);
+
+    webviewView.webview.onDidReceiveMessage((message: PetMessageCommand) => {
       handleWebviewMessage(message);
     });
 
-    // Handle dispose
-    panel.onDidDispose(() => {
-      currentPanel = undefined;
+    webviewView.onDidDispose(() => {
+      petView = undefined;
     });
 
-    // Sync current state to restored webview
-    panel.webview.postMessage({ command: 'syncState', state: petState });
-  }
-}
-
-/**
- * Activate the extension
- */
-export function activate(ctx: vscode.ExtensionContext) {
-  // Store context for use by other functions
-  context = ctx;
-
-  // Register the pet.open command
-  const disposable = vscode.commands.registerCommand('pet.open', () => {
-    createPetPanel(ctx);
-  });
-
-  ctx.subscriptions.push(disposable);
-
-  // Load saved state from GlobalState
-  loadState();
-
-  // Start the decay timer
-  startDecayTimer();
-  ctx.subscriptions.push({ dispose: stopDecayTimer });
-
-  // Register activity tracking (file save events)
-  vscode.workspace.onDidSaveTextDocument((document) => {
-    handleFileSave();
-  });
-
-  // Register webview panel serializer for state restoration
-  vscode.window.registerWebviewPanelSerializer('petView', new PetSerializer(ctx));
-}
-
-/**
- * Create the pet webview panel
- */
-function createPetPanel(context: vscode.ExtensionContext): void {
-  // If panel already exists, reveal it
-  if (currentPanel) {
-    currentPanel.reveal(vscode.ViewColumn.One);
-    return;
+    const theme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark
+      ? 'vscode-dark'
+      : 'vscode-light';
+    webviewView.webview.postMessage({ command: 'theme', theme });
+    webviewView.webview.postMessage({ command: 'syncState', state: petState });
   }
 
-  // Create the webview panel
-  const panel = vscode.window.createWebviewPanel(
-    'petView',
-    'Pet',
-    vscode.ViewColumn.One,
-    {
-      enableScripts: true,
-      localResourceRoots: [
-        vscode.Uri.file(path.join(context.extensionPath, 'dist-webview'))
-      ],
-      retainContextWhenHidden: true
-    }
-  );
+  private updateWebviewContent(webviewView: vscode.WebviewView): void {
+    const scriptUri = webviewView.webview.asWebviewUri(
+      vscode.Uri.file(path.join(this.ctx.extensionPath, 'dist-webview', 'webview.js'))
+    );
 
-  currentPanel = panel;
+    const nonce = getNonce();
 
-  // Set the HTML content
-  updateWebviewContent(panel, context);
+    const csp = [
+      "default-src 'none'",
+      `img-src ${webviewView.webview.cspSource} https:`,
+      `script-src 'nonce-${nonce}'`,
+      `style-src ${webviewView.webview.cspSource} 'unsafe-inline'`
+    ].join('; ');
 
-  // Handle messages from the webview
-  panel.webview.onDidReceiveMessage((message: PetMessageCommand) => {
-    handleWebviewMessage(message);
-  });
-
-  // Clean up when panel is closed
-  panel.onDidDispose(() => {
-    currentPanel = undefined;
-  });
-}
-
-/**
- * Update the webview content
- */
-function updateWebviewContent(panel: vscode.WebviewPanel, context: vscode.ExtensionContext): void {
-  // Get webview URI for the dist-webview directory
-  const webviewRoot = panel.webview.asWebviewUri(
-    vscode.Uri.file(path.join(context.extensionPath, 'dist-webview'))
-  );
-  
-  // Build CSP that allows resources from our webview directory
-  const csp = [
-    "default-src 'none'",
-    `img-src ${webviewRoot} https:`,
-    `script-src ${webviewRoot}`,
-    `style-src ${webviewRoot}`
-  ].join('; ');
-
-  const htmlContent = `<!DOCTYPE html>
+    webviewView.webview.html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -160,26 +83,52 @@ function updateWebviewContent(panel: vscode.WebviewPanel, context: vscode.Extens
   <title>Pet</title>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="${webviewRoot}/webview.js"></script>
+  <div id="root">Loading...</div>
+  <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
-
-  panel.webview.html = htmlContent;
-
-  // Send theme info to webview
-  const theme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark
-    ? 'vscode-dark'
-    : 'vscode-light';
-  panel.webview.postMessage({ command: 'theme', theme });
-
-  // Send initial state to webview
-  panel.webview.postMessage({ command: 'syncState', state: petState });
+  }
 }
 
-/**
- * Handle messages from the webview
- */
+export function activate(ctx: vscode.ExtensionContext) {
+  context = ctx;
+
+  const provider = new PetViewProvider(ctx);
+  ctx.subscriptions.push(
+    vscode.window.registerWebviewViewProvider('petView.main', provider)
+  );
+
+  const disposable = vscode.commands.registerCommand('pet.open', () => {
+    if (petView) {
+      petView.show(true);
+    }
+  });
+  ctx.subscriptions.push(disposable);
+
+  loadState();
+  startDecayTimer();
+  ctx.subscriptions.push({ dispose: stopDecayTimer });
+
+  vscode.workspace.onDidSaveTextDocument(() => {
+    handleFileSave();
+  });
+
+  vscode.window.onDidChangeActiveColorTheme((e) => {
+    if (petView) {
+      const theme = e.kind === vscode.ColorThemeKind.Dark
+        ? 'vscode-dark'
+        : 'vscode-light';
+      petView.webview.postMessage({ command: 'theme', theme });
+    }
+  });
+}
+
+function syncStateToWebview(): void {
+  if (petView) {
+    petView.webview.postMessage({ command: 'syncState', state: petState });
+  }
+}
+
 function handleWebviewMessage(message: PetMessageCommand): void {
   switch (message.command) {
     case 'interact':
@@ -189,39 +138,28 @@ function handleWebviewMessage(message: PetMessageCommand): void {
       petState = message.state;
       break;
     case 'getTheme':
-      if (currentPanel) {
+      if (petView) {
         const theme = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark
           ? 'vscode-dark'
           : 'vscode-light';
-        currentPanel.webview.postMessage({ command: 'theme', theme });
+        petView.webview.postMessage({ command: 'theme', theme });
       }
       break;
   }
-
-  // Update the webview with new state
-  if (currentPanel) {
-    currentPanel.webview.postMessage({ command: 'syncState', state: petState });
-  }
+  syncStateToWebview();
 }
 
-/**
- * Save current pet state to GlobalState
- */
 function saveState(): void {
   const serialized = JSON.stringify(petState);
   context.globalState.update('petState', serialized);
 }
 
-/**
- * Load pet state from GlobalState
- */
 function loadState(): void {
   const saved = context.globalState.get<string>('petState');
   if (saved) {
     try {
       const parsed = JSON.parse(saved) as PetState;
       petState = { ...petState, ...parsed };
-      // Calculate decay that occurred while VS Code was closed
       const elapsed = Date.now() - petState.lastUpdated;
       const hungerDecays = Math.floor(elapsed / HUNGER_DECAY_RATE);
       const energyDecays = Math.floor(elapsed / ENERGY_DECAY_RATE);
@@ -234,12 +172,9 @@ function loadState(): void {
   }
 }
 
-/**
- * Start the decay timer
- */
 function startDecayTimer(): void {
   if (decayInterval) {
-    return; // Already running
+    return;
   }
 
   decayInterval = setInterval(() => {
@@ -248,7 +183,6 @@ function startDecayTimer(): void {
 
     let changed = false;
 
-    // Check hunger decay
     if (elapsed >= HUNGER_DECAY_RATE) {
       const hungerDecays = Math.floor(elapsed / HUNGER_DECAY_RATE);
       petState.hunger = Math.max(0, petState.hunger - hungerDecays);
@@ -256,7 +190,6 @@ function startDecayTimer(): void {
       changed = true;
     }
 
-    // Check energy decay
     const energyElapsed = now - petState.lastUpdated;
     if (energyElapsed >= ENERGY_DECAY_RATE) {
       const energyDecays = Math.floor(energyElapsed / ENERGY_DECAY_RATE);
@@ -265,29 +198,22 @@ function startDecayTimer(): void {
       changed = true;
     }
 
-    // Mood decays when hunger < 30 or energy < 30
     if (petState.hunger < 30 || petState.energy < 30) {
       petState.mood = Math.max(0, petState.mood - 1);
       changed = true;
     }
 
-    // Clamp all stats to 0-100
     petState.mood = Math.max(0, Math.min(100, petState.mood));
     petState.hunger = Math.max(0, Math.min(100, petState.hunger));
     petState.energy = Math.max(0, Math.min(100, petState.energy));
 
     if (changed) {
       saveState();
-      if (currentPanel) {
-        currentPanel.webview.postMessage({ command: 'syncState', state: petState });
-      }
+      syncStateToWebview();
     }
   }, DECAY_CHECK_INTERVAL);
 }
 
-/**
- * Stop the decay timer
- */
 function stopDecayTimer(): void {
   if (decayInterval) {
     clearInterval(decayInterval);
@@ -295,35 +221,23 @@ function stopDecayTimer(): void {
   }
 }
 
-/**
- * Handle file save event - tracks coding activity and increases mood
- */
 function handleFileSave(): void {
   const now = Date.now();
   const timeSinceLastSave = now - lastSaveTimestamp;
 
-  // Check if this is within an active session (saves within 5-minute window)
   if (timeSinceLastSave < ACTIVITY_SESSION_WINDOW || lastSaveTimestamp === 0) {
-    // Increase mood by random amount between MIN and MAX
     const moodIncrease = Math.floor(Math.random() * (MAX_MOOD_INCREASE - MIN_MOOD_INCREASE + 1)) + MIN_MOOD_INCREASE;
     petState.mood = Math.min(100, petState.mood + moodIncrease);
   }
 
-  // Update timestamp and interaction time
   lastSaveTimestamp = now;
   petState.lastInteraction = now;
   petState.lastUpdated = now;
 
-  // Save and sync state
   saveState();
-  if (currentPanel) {
-    currentPanel.webview.postMessage({ command: 'syncState', state: petState });
-  }
+  syncStateToWebview();
 }
 
-/**
- * Get animation duration based on animation state
- */
 function getAnimationDuration(animationState: string): number {
   switch (animationState) {
     case 'eating': return 1500;
@@ -333,25 +247,16 @@ function getAnimationDuration(animationState: string): number {
   }
 }
 
-/**
- * Get mood-based animation state based on current stats
- */
 function getMoodAnimationState(state: PetState): 'idle' | 'neutral' | 'sad' {
-  // If stats are low, pet looks sad
   if (state.hunger < 30 || state.energy < 30) {
     return 'sad';
   }
-  // If stats are okay, neutral
   if (state.hunger < 50 || state.energy < 50) {
     return 'neutral';
   }
-  // Otherwise idle
   return 'idle';
 }
 
-/**
- * Handle pet interaction
- */
 function handleInteraction(action: 'feed' | 'play' | 'pet'): void {
   petState.lastInteraction = Date.now();
   petState.lastUpdated = Date.now();
@@ -373,30 +278,28 @@ function handleInteraction(action: 'feed' | 'play' | 'pet'): void {
       break;
   }
 
-  // Save state after interaction
   saveState();
+  syncStateToWebview();
 
-  // Send to webview
-  if (currentPanel) {
-    currentPanel.webview.postMessage({ command: 'syncState', state: petState });
-  }
-
-  // Reset animation state after animation completes
   const duration = getAnimationDuration(petState.animationState);
   setTimeout(() => {
     const moodState = getMoodAnimationState(petState);
     petState.animationState = moodState;
     saveState();
-    if (currentPanel) {
-      currentPanel.webview.postMessage({ command: 'syncState', state: petState });
-    }
+    syncStateToWebview();
   }, duration);
 }
 
-/**
- * Deactivate the extension
- */
 export function deactivate(): void {
   stopDecayTimer();
-  currentPanel = undefined;
+  petView = undefined;
+}
+
+function getNonce(): string {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
 }
