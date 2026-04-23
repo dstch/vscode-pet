@@ -8,10 +8,6 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, 'dist-webview'),
     filename: 'webview.js',
-    library: {
-      name: 'webview',
-      type: 'var',
-    },
   },
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx'],

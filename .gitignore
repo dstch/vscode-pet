@@ -1,9 +1,9 @@
 # Dependencies
 node_modules/
 
-# Build outputs
-dist/
-dist-webview/
+# Build outputs (commit these - needed for extension to run)
+# dist/
+# dist-webview/
 
 # VS Code
 .vscode-test*/
